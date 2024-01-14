@@ -5,6 +5,7 @@ import { Dashboard } from '@/pages/app/dashboard'
 import { SignIn } from '@/pages/auth/signIn'
 
 import { AuthLayout } from './pages/_layouts/auth'
+import { Orders } from './pages/app/orders.tsx/orders'
 import { SignUp } from './pages/auth/signUp'
 
 export const router = createBrowserRouter([
@@ -15,6 +16,10 @@ export const router = createBrowserRouter([
       {
         path: '/',
         element: <Dashboard />,
+      },
+      {
+        path: '/orders',
+        element: <Orders />,
       },
     ],
   },

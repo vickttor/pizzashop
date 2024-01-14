@@ -7,10 +7,13 @@ import { Orders } from '@/pages/app/orders/orders'
 import { SignIn } from '@/pages/auth/signIn'
 import { SignUp } from '@/pages/auth/signUp'
 
+import { NotFound } from './pages/404'
+
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <AppLayout />,
+    errorElement: <NotFound />,
     children: [
       {
         path: '/',

@@ -1,3 +1,4 @@
+import { useMutation } from '@tanstack/react-query'
 import { CheckCircle, Loader2 } from 'lucide-react'
 import { Helmet } from 'react-helmet-async'
 import { useForm } from 'react-hook-form'
@@ -5,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
+import { registerRestaurant } from '@/api/register-restaurant'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,23 +29,24 @@ export function SignUp() {
     formState: { isSubmitting },
   } = useForm<signUpFormType>()
 
+  const { mutateAsync: registerRestaurantFn } = useMutation({
+    mutationFn: registerRestaurant,
+  })
+
   const handleSignUp = async (data: signUpFormType) => {
     try {
-      if (!data.restaurantName.length)
-        throw new Error('Insira o nome do estabelecimento')
-      if (!data.managerName.length) throw new Error('Insira seu nome')
-      if (!data.email.length) throw new Error('Insira seu E-mail')
-      if (!data.phone.length) throw new Error('Insira seu número de celular')
-
-      console.log(data)
-
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      await registerRestaurantFn({
+        email: data.email,
+        managerName: data.managerName,
+        restaurantName: data.restaurantName,
+        phone: data.phone,
+      })
 
       toast.success('Restaurante cadastrado com sucesso!', {
         icon: <CheckCircle className="h-5 w-5 text-green-600" />,
         action: {
           label: 'Login',
-          onClick: () => navigate('/sign-in'),
+          onClick: () => navigate(`/sign-in?email=${data.email}`),
         },
       })
     } catch (error: unknown) {

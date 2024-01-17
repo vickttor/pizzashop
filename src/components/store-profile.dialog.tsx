@@ -24,7 +24,7 @@ import { Textarea } from './ui/textarea'
 
 const storeProfileSchema = z.object({
   name: z.string().min(1),
-  description: z.string(),
+  description: z.string().nullable(),
 })
 
 type StoreProfileSchema = z.infer<typeof storeProfileSchema>
@@ -38,11 +38,7 @@ export function StoreProfileDialog() {
     refetchOnWindowFocus: false,
   })
 
-  const {
-    register,
-    handleSubmit,
-    formState: { isSubmitting },
-  } = useForm<StoreProfileSchema>({
+  const { register, handleSubmit } = useForm<StoreProfileSchema>({
     resolver: zodResolver(storeProfileSchema),
     values: {
       name: managedRestaurant?.name ?? '',
@@ -50,19 +46,36 @@ export function StoreProfileDialog() {
     },
   })
 
-  const { mutateAsync: updateProfileFn } = useMutation({
+  function updateManagedRestaurantCache({
+    name,
+    description,
+  }: StoreProfileSchema) {
+    const cached = queryClient.getQueryData<GetManagedRestaurant>([
+      'managed-restaurant',
+    ])
+
+    queryClient.setQueryData(['managed-restaurant'], () => {
+      return {
+        ...cached,
+        name,
+        description,
+      }
+    })
+
+    return { cached }
+  }
+
+  const { mutateAsync: updateProfileFn, isPending } = useMutation({
     mutationFn: updateProfile,
-    onSuccess(_, variables) {
-      queryClient.setQueryData(
-        ['managed-restaurant'],
-        (data: GetManagedRestaurant) => {
-          return {
-            ...data,
-            name: variables.name,
-            description: variables.description,
-          }
-        },
-      )
+    onMutate({ name, description }) {
+      const { cached } = updateManagedRestaurantCache({ name, description })
+
+      return { previousProfile: cached }
+    },
+    onError(_, __, context) {
+      if (context?.previousProfile) {
+        updateManagedRestaurantCache(context.previousProfile)
+      }
     },
   })
 
@@ -124,10 +137,10 @@ export function StoreProfileDialog() {
           <Button
             type="submit"
             variant="success"
-            disabled={isSubmitting}
+            disabled={isPending}
             className="min-w-[110px]"
           >
-            {isSubmitting ? (
+            {isPending ? (
               <Loader2Icon className="size-5 animate-spin" />
             ) : (
               'Salvar'
